@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PowderyVision7 – Mildew Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4CAF50">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PowderyVision7">
+  <meta name="application-name" content="PowderyVision7">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    body {
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: background-image 1s ease-in-out;
+      padding-bottom: 110px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    input[type="file"] { display: none; }
+
+    /* ══════════════════════════════════════════════════════
+       LUCIDE — tamaños globales
+       ══════════════════════════════════════════════════════ */
+    .lucide-tab {
+      width: 22px; height: 22px;
+      stroke: currentColor; stroke-width: 1.8px; fill: none;
+      display: block; margin: 0 auto;
+    }
+    .lucide-scope {
+      width: 18px; height: 18px;
+      stroke: currentColor; stroke-width: 2px; fill: none;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .lucide-scope-title {
+      width: 18px; height: 18px;
+      stroke: #7B4800; stroke-width: 2px; fill: none; flex-shrink: 0;
+    }
+    .lucide-scope-lang {
+      width: 14px; height: 14px;
+      stroke: currentColor; stroke-width: 2px; fill: none; flex-shrink: 0;
+    }
+    .lucide-fab {
+      width: 30px; height: 30px;
+      stroke: currentColor; stroke-width: 2px; fill: none;
+      pointer-events: none;
+    }
+    .lucide-modal-step {
+      width: 18px; height: 18px;
+      stroke: currentColor; stroke-width: 2px; fill: none;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .lucide-btn {
+      width: 18px; height: 18px;
+      stroke: currentColor; stroke-width: 2px; fill: none; flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       LOGOS ROW — 3 logos
+       ══════════════════════════════════════════════════════ */
+    .logos-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 10px 16px;
+      flex-wrap: wrap;
+    }
+    .logos-row img {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo-divider {
+      width: 1px;
+      height: 40px;
+      background: rgba(0,0,0,0.18);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       LANGUAGE SWITCHER
+       ══════════════════════════════════════════════════════ */
+    .lang-switcher{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin:12px 0 18px;
+    }
+    .lang-btn{
+      background:rgba(255,255,255,0.92);
+      border:2px solid #4CAF50;
+      color:#1b5e20;
+      border-radius:10px;
+      padding:8px 16px;
+      font-size:0.82rem;
+      font-weight:800;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .lang-btn:hover{
+      background:#f1f8e9;
+    }
+    .lang-btn.active{
+      background:#2e7d32;
+      color:#fff;
+      border-color:#2e7d32;
+    }
+
+    /* Mostrar solo un idioma */
+    html[data-lang="en"] .lang-es,
+    html[data-lang="en"] .lang-pt,
+    html[data-lang="en"] .scope-lang.es,
+    html[data-lang="en"] .scope-lang.pt,
+    html[data-lang="en"] .modal-lang-block.es,
+    html[data-lang="en"] .modal-lang-block.pt{
+      display:none !important;
+    }
+    html[data-lang="es"] .lang-en,
+    html[data-lang="es"] .lang-pt,
+    html[data-lang="es"] .scope-lang.en,
+    html[data-lang="es"] .scope-lang.pt,
+    html[data-lang="es"] .modal-lang-block.en,
+    html[data-lang="es"] .modal-lang-block.pt{
+      display:none !important;
+    }
+    html[data-lang="pt"] .lang-en,
+    html[data-lang="pt"] .lang-es,
+    html[data-lang="pt"] .scope-lang.en,
+    html[data-lang="pt"] .scope-lang.es,
+    html[data-lang="pt"] .modal-lang-block.en,
+    html[data-lang="pt"] .modal-lang-block.es{
+      display:none !important;
+    }
+
+    /* Tabs */
+    html[data-lang="en"] .tab-en{ display:block; }
+    html[data-lang="en"] .tab-es,
+    html[data-lang="en"] .tab-pt{ display:none; }
+
+    html[data-lang="es"] .tab-en,
+    html[data-lang="es"] .tab-pt{ display:none; }
+    html[data-lang="es"] .tab-es{ display:block; }
+
+    html[data-lang="pt"] .tab-en,
+    html[data-lang="pt"] .tab-es{ display:none; }
+    html[data-lang="pt"] .tab-pt{ display:block; }
+
+    /* ══════════════════════════════════════════════════════
+       SISTEMA DE 5 PESTAÑAS — barra inferior
+       ══════════════════════════════════════════════════════ */
+    .tabs-wrapper {
+      margin-top: 18px;
+      padding-bottom: 16px;
+    }
+    .tab-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(0,0,0,0.85);
+      border-radius: 18px 18px 0 0;
+      overflow: hidden;
+      border: 1.5px solid rgba(76,175,80,0.30);
+      border-bottom: none;
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      z-index: 300;
+      width: min(100%, 920px);
+      box-shadow: 0 -6px 22px rgba(0,0,0,0.30);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-btn {
+      min-width: 0;
+      padding: 11px 4px 10px;
+      background: transparent; border: none;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; transition: background 0.22s, color 0.22s, box-shadow 0.22s;
+      text-align: center; line-height: 1.3; position: relative;
+      border-right: 1px solid rgba(76,175,80,0.12);
+    }
+    .tab-btn:last-child { border-right: none; }
+    .tab-btn .tab-icon {
+      display: flex; justify-content: center; align-items: center;
+      height: 26px; margin-bottom: 4px;
+    }
+    .tab-btn .tab-en  { display: block; font-size: 0.70rem; font-weight: 800; }
+    .tab-btn .tab-es  { display: block; font-size: 0.58rem; opacity: 0.60; font-weight: 500; margin-top: 1px; }
+    .tab-btn.active   {
+      background: rgba(76,175,80,0.22);
+      color: #fff;
+      box-shadow: inset 0 3px 0 #4CAF50;
+    }
+    .tab-btn.active .tab-es { opacity: 0.90; }
+    .tab-btn:hover:not(.active) { background: rgba(76,175,80,0.10); color: rgba(255,255,255,0.85); }
+    .tab-btn.tab-disabled { opacity: 0.32; cursor: not-allowed; pointer-events: none; }
+    .tab-badge {
+      position: absolute; top: 5px; right: 5px;
+      background: #e53935; color: #fff;
+      font-size: 0.55rem; font-weight: 800;
+      border-radius: 8px; padding: 1px 5px;
+      animation: badgePulse 1.8s ease-in-out infinite;
+    }
+    @keyframes badgePulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.18);} }
+
+    .tab-panel {
+      display: none;
+      background: rgba(0,0,0,0.04);
+      border: 1.5px solid rgba(76,175,80,0.28);
+      border-radius: 14px;
+      padding: 20px 12px 32px;
+      animation: panelIn 0.35s ease both;
+    }
+    .tab-panel.active { display: block; }
+    @keyframes panelIn { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+
+    @media (max-width: 768px) {
+      body { padding-bottom: 118px; }
+      .tab-bar { width: calc(100% - 12px); }
+      .tab-btn { padding: 10px 2px 9px; }
+      .tab-btn .tab-en { font-size: 0.60rem; }
+      .tab-btn .tab-es { font-size: 0.50rem; }
+      .lucide-tab { width: 20px; height: 20px; }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SCOPE-BLOCK — fondo blanco alto contraste
+       ══════════════════════════════════════════════════════ */
+    .scope-block {
+      background: rgba(255,255,255,0.93);
+      border: 1.5px solid rgba(249,168,37,0.60);
+      border-left: 5px solid #F9A825;
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.20);
+      color: #1a1a1a;
+    }
+    .scope-block-title {
+      font-size: 0.90rem; font-weight: 800;
+      color: #7B4800;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .scope-lang {
+      margin-bottom: 12px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.10);
+    }
+    .scope-lang:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .scope-lang-label {
+      font-size: 0.68rem; letter-spacing: 0.09em;
+      text-transform: uppercase; font-weight: 800;
+      margin-bottom: 9px; display: flex; align-items: center; gap: 6px;
+    }
+    .scope-lang-label.en { color: #1565C0; }
+    .scope-lang-label.es { color: #2e7d32; }
+    .scope-lang-label.pt { color: #6A1B9A; }
+    .scope-row {
+      display: flex; gap: 9px;
+      font-size: 0.82rem; line-height: 1.60;
+      margin-bottom: 7px; color: #1a1a1a; opacity: 1;
+    }
+    .scope-row strong        { color: #1b5e20; }
+    .scope-row strong.warn   { color: #7B4800; }
+    .scope-row strong.danger { color: #b71c1c; }
+    .scope-row.row-plant .lucide-scope { stroke: #2e7d32; }
+    .scope-row.row-warn  .lucide-scope { stroke: #7B4800; }
+    .scope-row.row-micro .lucide-scope { stroke: #1565C0; }
+    .scope-row.row-pin   .lucide-scope { stroke: #b71c1c; }
+
+    /* ── Overlay de carga ─── */
+    #loading-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.70); z-index: 9999;
+      flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+    }
+    #loading-overlay.active { display: flex; }
+    .spinner {
+      width: 72px; height: 72px;
+      border: 7px solid rgba(255,255,255,0.25);
+      border-top-color: #4CAF50; border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .loading-card {
+      background: rgba(27,94,32,0.92); border: 2px solid #4CAF50;
+      border-radius: 16px; padding: 28px 36px; text-align: center; color: #fff; max-width: 360px;
+    }
+    .loading-card strong { font-size: 1.15rem; }
+    .loading-card p { margin: 10px 0 0; font-size: 0.88rem; opacity: 0.85; line-height: 1.5; }
+    .loading-steps { margin-top: 14px; font-size: 0.82rem; opacity: 0.75; text-align: left; line-height: 1.8; }
+
+    /* ── Preview ── */
+    #preview-box {
+      display: none; align-items: center; gap: 14px;
+      background: rgba(76,175,80,0.12); border: 1.5px solid #4CAF50;
+      border-radius: 10px; padding: 10px 14px; margin-top: 10px;
+    }
+    #preview-box.visible { display: flex; }
+    #preview-thumb { width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid #4CAF50; flex-shrink:0; }
+    #preview-info { font-size: 0.85rem; line-height: 1.5; }
+    #preview-info strong { color: #2e7d32; }
+
+    /* ── CSV ── */
+    .csv-button {
+      display: inline-flex; align-items: center; gap: 9px;
+      margin-top: 14px; background: #1565C0; color: #fff;
+      border: none; border-radius: 8px; padding: 10px 22px;
+      font-size: 0.95rem; cursor: pointer;
+    }
+    .csv-button:hover { background: #0D47A1; }
+
+    /* ══════════════════════════════════════════════════════
+       FABs
+       ══════════════════════════════════════════════════════ */
+    .fab {
+      position: fixed;
+      right: 16px;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      user-select: none;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+    }
+    .fab.fab-hidden { opacity: 0; pointer-events: none; transform: scale(0.7) !important; }
+    .fab:hover { animation: none !important; transform: scale(1.10) !important; }
+
+    .lucide-fab {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      stroke-width: 2px;
+      fill: none;
+      pointer-events: none;
+    }
+
+    #help-button {
+      bottom: 20px;
+      background: linear-gradient(135deg,#fff,#f1f8e9);
+      border: 3px solid #4CAF50;
+      box-shadow: 0 4px 20px rgba(76,175,80,0.55);
+      color: #2e7d32;
+      animation: helpBounce 2.8s ease-in-out infinite;
+    }
+    @keyframes helpBounce {
+      0%,100%{transform:translateY(0) scale(1);}
+      30%{transform:translateY(-8px) scale(1.08);}
+      60%{transform:translateY(-4px) scale(1.04);}
+    }
+
+    #scope-button {
+      bottom: 86px;
+      background: linear-gradient(135deg,#fff8e1,#fffde7);
+      border: 3px solid #F9A825;
+      box-shadow: 0 4px 20px rgba(249,168,37,0.50);
+      color: #7B4800;
+      animation: scopePulse 3.4s ease-in-out infinite;
+    }
+    @keyframes scopePulse {
+      0%,100%{transform:scale(1);}
+      40%{transform:scale(1.08);}
+      70%{transform:scale(1.04);}
+    }
+
+    #tutorial-button {
+      bottom: 152px;
+      background: linear-gradient(135deg,#f3e5f5,#ede7f6);
+      border: 3px solid #7E57C2;
+      box-shadow: 0 4px 20px rgba(126,87,194,0.50);
+      color: #4A148C;
+      animation: tutorialPulse 3.1s ease-in-out infinite;
+    }
+    @keyframes tutorialPulse {
+      0%,100%{transform:scale(1);}
+      45%{transform:scale(1.08);}
+      70%{transform:scale(1.04);}
+    }
+
+    .fab-bubble {
+      display: none;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       MODALES
+       ══════════════════════════════════════════════════════ */
+    .text-modal-overlay {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.82); z-index:10002;
+      align-items:flex-start; justify-content:center;
+      padding:24px 12px; overflow-y:auto;
+    }
+    .text-modal-overlay.active { display:flex; }
+    .text-modal-box {
+      background:#0d1a0d; border:2px solid #4CAF50;
+      border-radius:20px; padding:28px 22px 22px;
+      max-width:500px; width:100%; color:#fff; position:relative;
+      box-shadow:0 8px 40px rgba(76,175,80,0.35); margin:auto;
+    }
+    .text-modal-box.amber-modal { border-color:#F9A825; box-shadow:0 8px 40px rgba(249,168,37,0.30); }
+    .text-modal-close {
+      position:absolute; top:14px; right:14px;
+      background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2);
+      border-radius:50%; width:34px; height:34px;
+      color:#fff; font-size:1rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+    }
+    .text-modal-close:hover { background:rgba(220,50,50,0.45); }
+    .text-modal-title { font-size:1.1rem; font-weight:800; margin-bottom:18px; padding-right:40px; line-height:1.4; color:#81C784; display:flex; align-items:center; gap:8px; }
+    .text-modal-box.amber-modal .text-modal-title { color:#FFCA28; }
+    .modal-lang-block { margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid rgba(255,255,255,0.10); }
+    .modal-lang-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+    .modal-lang-label { font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:800; margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+    .modal-lang-label.en { color:#64B5F6; }
+    .modal-lang-label.es { color:#A5D6A7; }
+    .modal-lang-label.pt { color:#CE93D8; }
+    .modal-step { display:flex; gap:10px; margin-bottom:10px; font-size:0.85rem; line-height:1.55; }
+    .modal-step-text { opacity:0.88; }
+    .modal-step-text strong { color:#81C784; opacity:1; }
+    .text-modal-box.amber-modal .modal-step-text strong { color:#FFCA28; }
+
+    /* ══════════════════════════════════════════════════════
+       TUTORIAL
+       ══════════════════════════════════════════════════════ */
+    #tutorial-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.87); z-index:10001; align-items:center; justify-content:center; padding:16px; }
+    #tutorial-overlay.active { display:flex; }
+    #tutorial-modal { background:linear-gradient(160deg,#1a2e1a,#0d1a0d); border:2px solid #4CAF50; border-radius:24px; padding:36px 24px 22px; max-width:400px; width:100%; position:relative; color:#fff; box-shadow:0 8px 48px rgba(76,175,80,0.45); overflow:hidden; }
+    #tut-progress-bar { position:absolute; top:0; left:0; height:5px; background:linear-gradient(90deg,#4CAF50,#81C784); border-radius:0 3px 0 0; transition:width 0.5s ease; }
+    #tut-close { position:absolute; top:14px; right:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:50%; width:34px; height:34px; color:#fff; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; z-index:5; }
+    #tut-close:hover { background:rgba(220,50,50,0.45); }
+    #tut-dots { display:flex; justify-content:center; gap:10px; margin-bottom:18px; }
+    .t-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.22); cursor:pointer; transition:all 0.3s; }
+    .t-dot.active { background:#4CAF50; transform:scale(1.35); box-shadow:0 0 8px rgba(76,175,80,0.85); }
+    .tut-scene { display:none; flex-direction:column; align-items:center; min-height:310px; padding:0 4px; }
+    .tut-scene.active { display:flex; animation:sceneFadeSlide .45s cubic-bezier(.22,.68,0,1.2) both; }
+    @keyframes sceneFadeSlide { from{opacity:0;transform:translateX(32px) scale(.97);}to{opacity:1;transform:translateX(0) scale(1);} }
+    .tut-step-label { font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:#81C784; margin-bottom:5px; font-weight:800; }
+    .tut-title { font-size:1.12rem; font-weight:700; text-align:center; margin-bottom:18px; line-height:1.45; }
+    .tut-desc  { font-size:.82rem; text-align:center; opacity:.82; line-height:1.65; margin-top:12px; max-width:320px; }
+    #tut-nav { display:flex; align-items:center; justify-content:space-between; margin-top:18px; gap:8px; }
+    .t-nav-btn { background:rgba(76,175,80,.18); border:1.5px solid #4CAF50; color:#fff; border-radius:10px; padding:8px 22px; font-size:1rem; cursor:pointer; font-weight:600; transition:background .2s; }
+    .t-nav-btn:hover { background:rgba(76,175,80,.42); }
+    .t-nav-btn:disabled { opacity:.28; cursor:default; pointer-events:none; }
+    #tut-counter { font-size:.82rem; opacity:.65; min-width:44px; text-align:center; }
+
+    /* Escenas tutorial */
+    .leaves-grid{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+    .leaf-card{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:13px 10px 10px;width:90px;border:2px solid transparent;position:relative;animation:leafCardIn .55s ease both;}
+    .leaf-card.ok{border-color:#4CAF50;}.leaf-card.bad{border-color:#e53935;animation:leafCardIn .55s ease both,badShake .7s ease 1.4s both;}
+    .leaf-emoji{font-size:2.4rem;margin-bottom:5px;line-height:1;}.leaf-name{font-size:.65rem;text-align:center;line-height:1.4;opacity:.88;}.leaf-name em{font-size:.58rem;display:block;opacity:.68;margin-top:1px;}
+    .leaf-badge{position:absolute;top:-11px;right:-11px;font-size:1.15rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+    @keyframes leafCardIn{from{opacity:0;transform:translateY(22px) scale(.82);}to{opacity:1;transform:translateY(0) scale(1);}}
+    @keyframes badShake{0%,100%{transform:translateX(0) rotate(0);}20%{transform:translateX(-6px) rotate(-4deg);}40%{transform:translateX(6px) rotate(4deg);}60%{transform:translateX(-4px) rotate(-2deg);}80%{transform:translateX(4px) rotate(2deg);}}
+    .phone-wrap{display:flex;align-items:flex-end;justify-content:center;gap:18px;}
+    .phone-body{width:105px;height:185px;background:#1a1a1a;border:4px solid #3a3a3a;border-radius:22px;display:flex;flex-direction:column;align-items:center;box-shadow:0 8px 32px rgba(0,0,0,.7);animation:phoneSlideIn .65s cubic-bezier(.22,.68,0,1.2) both;}
+    @keyframes phoneSlideIn{from{opacity:0;transform:translateY(28px) rotate(-6deg);}to{opacity:1;transform:translateY(0) rotate(0deg);}}
+    .phone-notch{width:34px;height:7px;background:#2a2a2a;border-radius:0 0 7px 7px;margin-top:3px;flex-shrink:0;}
+    .phone-screen{flex:1;width:calc(100% - 8px);margin:4px 4px 0;background:#0a1a0a;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+    .screen-leaf{font-size:3rem;animation:leafBreath 2.5s ease-in-out infinite;z-index:1;}
+    @keyframes leafBreath{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+    .focus-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;animation:focusAF 2.6s ease-in-out infinite;}
+    @keyframes focusAF{0%{width:78px;height:78px;opacity:.35;}45%{width:54px;height:54px;opacity:1;}85%{width:54px;height:54px;opacity:.6;}100%{width:78px;height:78px;opacity:.35;}}
+    .fc{position:absolute;width:13px;height:13px;border-color:#4CAF50;border-style:solid;}
+    .fc.tl{top:0;left:0;border-width:2.5px 0 0 2.5px;}.fc.tr{top:0;right:0;border-width:2.5px 2.5px 0 0;}
+    .fc.bl{bottom:0;left:0;border-width:0 0 2.5px 2.5px;}.fc.br{bottom:0;right:0;border-width:0 2.5px 2.5px 0;}
+    .focus-flash{position:absolute;inset:0;background:rgba(76,175,80,0);border-radius:10px;z-index:2;animation:focusFlash 2.6s ease-in-out infinite;}
+    @keyframes focusFlash{0%,40%,100%{background:rgba(76,175,80,0);}50%{background:rgba(76,175,80,.22);}60%{background:rgba(76,175,80,0);}}
+    .phone-home{width:26px;height:5px;background:#2a2a2a;border-radius:3px;margin:5px auto;flex-shrink:0;}
+    .frame-tip{background:rgba(76,175,80,.18);border:1.5px dashed #4CAF50;border-radius:10px;padding:8px 12px;font-size:.74rem;text-align:center;line-height:1.5;max-width:140px;align-self:center;animation:leafCardIn .6s ease .3s both;}
+    .frame-tip strong{color:#81C784;display:block;margin-bottom:2px;}
+    .capture-row{display:flex;gap:16px;justify-content:center;width:100%;}
+    .cap-opt{display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1.5px solid rgba(76,175,80,.35);border-radius:14px;padding:16px 12px;width:110px;animation:leafCardIn .5s ease both;}
+    .cap-opt:nth-child(3){animation-delay:.2s;}
+    .cap-opt-icon{font-size:2.5rem;position:relative;}
+    .cap-opt-label{font-size:.70rem;text-align:center;line-height:1.45;opacity:.85;}
+    .finger{position:absolute;bottom:-10px;right:-10px;font-size:1.2rem;animation:fingerTap 2.2s ease-in-out infinite;transform-origin:bottom right;}
+    @keyframes fingerTap{0%,50%,100%{transform:rotate(0deg) scale(1);opacity:1;}30%{transform:rotate(-25deg) scale(.88);opacity:.7;}}
+    .shutter-flash{position:absolute;inset:-4px;background:rgba(255,255,255,0);border-radius:8px;animation:shutterFlash 2.2s ease-in-out infinite;}
+    @keyframes shutterFlash{0%,25%,55%,100%{background:rgba(255,255,255,0);}35%{background:rgba(255,255,255,.65);}42%{background:rgba(255,255,255,0);}}
+    .file-check{font-size:1.4rem;animation:fileCheck 2.8s ease-in-out infinite;}
+    @keyframes fileCheck{0%,40%,100%{transform:scale(1);opacity:.5;}60%{transform:scale(1.3);opacity:1;}}
+    .cap-divider{display:flex;align-items:center;color:rgba(255,255,255,.3);font-size:.78rem;font-weight:700;}
+    .analyze-demo{display:flex;flex-direction:column;align-items:center;gap:14px;width:100%;}
+    .demo-btn{background:linear-gradient(135deg,#2e7d32,#4CAF50);border:none;border-radius:10px;color:#fff;font-size:1rem;font-weight:700;padding:12px 30px;cursor:default;animation:demoPress 3.2s ease-in-out infinite;box-shadow:0 4px 18px rgba(76,175,80,.45);}
+    @keyframes demoPress{0%,35%,100%{transform:scale(1);}15%{transform:scale(1.07);}50%{transform:scale(.91);background:#1b5e20;}58%{transform:scale(1);}}
+    .demo-spinner-wrap{display:flex;align-items:center;gap:8px;font-size:.82rem;opacity:.8;animation:spinnerAppear 3.2s ease-in-out infinite;}
+    @keyframes spinnerAppear{0%,45%{opacity:0;transform:translateY(8px);}58%,72%{opacity:1;transform:translateY(0);}82%,100%{opacity:0;transform:translateY(8px);}}
+    .demo-mini-spinner{width:22px;height:22px;border:3px solid rgba(255,255,255,.2);border-top-color:#4CAF50;border-radius:50%;animation:spin .9s linear infinite;flex-shrink:0;}
+    .demo-result{background:rgba(76,175,80,.15);border:1.5px solid #4CAF50;border-radius:12px;padding:12px 20px;width:100%;max-width:270px;font-size:.79rem;line-height:1.7;animation:resultAppear 3.2s ease-in-out infinite;}
+    @keyframes resultAppear{0%,68%{opacity:0;transform:translateY(14px);}82%,94%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(14px);}}
+    .demo-result strong{color:#81C784;}
+    .sev-bar-wrap{height:7px;background:rgba(255,255,255,.12);border-radius:4px;margin-top:5px;overflow:hidden;}
+    .sev-bar{height:100%;width:18%;background:linear-gradient(90deg,#FFCA28,#FF8F00);border-radius:4px;animation:resultAppear 3.2s ease-in-out infinite;}
+  </style>
+</head>
+<body>
+  <audio id="successSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bubble-pop-up-alert-notification-2357.mp3" preload="auto"></audio>
+
+  <!-- ══ LOGOS — 3 instituciones ══ -->
+  <div class="logos-row" style="background-color:rgba(255,255,255,0.88);border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.15);">
+    <img src="https://agroconciencia.agrosavia.co/media/4finmqqk/unal.png" alt="Universidad Nacional de Colombia">
+    <div class="logo-divider"></div>
+    <img src="https://agroconciencia.agrosavia.co/media/pwvhl3sj/fac-ciencias.png" alt="Facultad de Ciencias Agrarias UNAL">
+    <div class="logo-divider"></div>
+    <img src="{{ url_for('static', filename='LOGO_227.png') }}" alt="Agrocomputation and Epidemiological Analysis Lab" style="height:48px;">
+  </div>
+
+  <div class="container-fluid">
+    <h1>PowderyComputerVision7</h1>
+
+   <div class="lang-switcher">
+  <button type="button" class="lang-btn active" id="lang-btn-en" onclick="setLanguage('en')">English</button>
+  <button type="button" class="lang-btn" id="lang-btn-es" onclick="setLanguage('es')">Español</button>
+   <button type="button" class="lang-btn" id="lang-btn-pt" onclick="setLanguage('pt')">português</button>
+</div>
+
+    {% if error_msg %}
+      <div class="card card-error">⚠️ {{ error_msg }}</div>
+    {% endif %}
+
+    <!-- ════════════════════════════════════════════════════
+         5 PESTAÑAS
+         ════════════════════════════════════════════════════ -->
+    <div class="tabs-wrapper">
+
+      <!-- ════════════════════════════════
+           PANEL 1 — INSTRUCTIONS
+           ════════════════════════════════ -->
+      <div class="tab-panel" id="tab-panel-0">
+
+        <div class="scope-block">
+          <div class="scope-block-title">
+            <i data-lucide="info" class="lucide-scope-title"></i>
+            <span class="lang-en">Model scope &amp; user responsibility</span>
+            <span class="lang-es">Alcance del modelo y responsabilidad del usuario</span>
+            <span class="lang-pt">Escopo do modelo e responsabilidade do usuário</span>
+          </div>
+
+          <div class="scope-lang en">
+            <div class="scope-lang-label en"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant"><i data-lucide="sprout" class="lucide-scope"></i><span>This tool was designed and validated <strong>exclusively</strong> for the detection of powdery mildew (<em>Erysiphe</em> spp.) in pea (<em>Pisum sativum</em> var. Vizcaya) and tomato (<em>Solanum lycopersicum</em> L.) leaves.</span></div>
+            <div class="scope-row row-warn"><i data-lucide="alert-triangle" class="lucide-scope"></i><span>Use on <strong class="warn">other crop species, plant diseases, or pathogens</strong> beyond the scope of this design is entirely at the user's own risk. Results obtained under these conditions may be inaccurate, misleading, or inapplicable for agronomic decision-making.</span></div>
+            <div class="scope-row row-micro"><i data-lucide="microscope" class="lucide-scope"></i><span>Always confirm results with a <strong>qualified agronomist or plant pathologist</strong> before taking any management action.</span></div>
+            <div class="scope-row row-pin"><i data-lucide="shield-alert" class="lucide-scope"></i><span>The developers <strong class="danger">assume no liability</strong> for misuse of the tool outside its intended scope.</span></div>
+          </div>
+
+          <div class="scope-lang es">
+            <div class="scope-lang-label es"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant"><i data-lucide="sprout" class="lucide-scope"></i><span>Esta herramienta fue diseñada y validada <strong>exclusivamente</strong> para la detección de mildiu polvoso (<em>Erysiphe</em> spp.) en hojas de arveja (<em>Pisum sativum</em> var. Vizcaya) y tomate (<em>Solanum lycopersicum</em> L.).</span></div>
+            <div class="scope-row row-warn"><i data-lucide="alert-triangle" class="lucide-scope"></i><span>El uso en <strong class="warn">otras especies de cultivo, enfermedades o patógenos</strong> fuera del alcance de diseño es de entera responsabilidad del usuario. Los resultados bajo estas condiciones pueden ser inexactos, engañosos o inaplicables para la toma de decisiones agronómicas.</span></div>
+            <div class="scope-row row-micro"><i data-lucide="microscope" class="lucide-scope"></i><span>Confirma siempre los resultados con un <strong>agrónomo o fitopatólogo calificado</strong> antes de tomar cualquier decisión de manejo.</span></div>
+            <div class="scope-row row-pin"><i data-lucide="shield-alert" class="lucide-scope"></i><span>Los desarrolladores <strong class="danger">no asumen ninguna responsabilidad</strong> por el uso de la herramienta fuera de su alcance previsto.</span></div>
+          </div>
+
+          <div class="scope-lang pt">
+            <div class="scope-lang-label pt"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant"><i data-lucide="sprout" class="lucide-scope"></i><span>Esta ferramenta foi projetada e validada <strong>exclusivamente</strong> para a detecção de oídio (<em>Erysiphe</em> spp.) em folhas de ervilha (<em>Pisum sativum</em> var. Vizcaya) e tomate (<em>Solanum lycopersicum</em> L.).</span></div>
+            <div class="scope-row row-warn"><i data-lucide="alert-triangle" class="lucide-scope"></i><span>O uso em <strong class="warn">outras espécies de cultivo, doenças de plantas ou patógenos</strong> fora do escopo deste projeto é de inteira responsabilidade do usuário. Os resultados obtidos nessas condições podem ser imprecisos, enganosos ou inaplicáveis para a tomada de decisão agronômica.</span></div>
+            <div class="scope-row row-micro"><i data-lucide="microscope" class="lucide-scope"></i><span>Sempre confirme os resultados com um <strong>agrônomo ou fitopatologista qualificado</strong> antes de adotar qualquer medida de manejo.</span></div>
+            <div class="scope-row row-pin"><i data-lucide="shield-alert" class="lucide-scope"></i><span>Os desenvolvedores <strong class="danger">não assumem qualquer responsabilidade</strong> pelo uso indevido da ferramenta fora do seu escopo previsto.</span></div>
+          </div>
+        </div>
+
+        <div class="card card-info">
+          <h3 style="display:flex;align-items:center;gap:7px;">
+            <i data-lucide="list-ordered" style="width:18px;height:18px;stroke:currentColor;stroke-width:2px;fill:none;"></i>
+            <span class="lang-en">How to use</span>
+            <span class="lang-es">Cómo usar</span>
+            <span class="lang-pt">Como usar</span>
+          </h3>
+
+          <div class="lang-en">
+            <p><strong style="color:#64B5F6;"></strong></p>
+            <ol style="margin:10px 0 16px 18px;font-size:0.88rem;line-height:1.8;">
+              <li><strong>Go to Tab 2 (Input)</strong> — Upload or take a photo of a pea or tomato leaf.</li>
+              <li><strong>Click "Analyze image"</strong> — The YOLO model classifies the species and detects powdery mildew.</li>
+              <li><strong>Go to Tab 3 (Results)</strong> — Read the classification result, severity estimate and management recommendations.</li>
+              <li><strong>Go to Tab 4 (Complementary Analysis)</strong> — Inspect the segmentation outline to verify correct detection.</li>
+              <li>Use results as <strong>decision support only</strong>. Always confirm with a qualified agronomist.</li>
+            </ol>
+          </div>
+
+          <div class="lang-es">
+            <p><strong style="color:#A5D6A7;"></strong></p>
+            <ol style="margin:10px 0 0 18px;font-size:0.88rem;line-height:1.8;">
+              <li><strong>Ve a la Pestaña 2 (Input)</strong> — Sube o toma una foto de la hoja de arveja o tomate.</li>
+              <li><strong>Haz clic en "Analizar imagen"</strong> — El modelo YOLO clasifica la especie y detecta el mildiu polvoso.</li>
+              <li><strong>Ve a la Pestaña 3 (Results)</strong> — Lee el resultado de clasificación, la severidad estimada y las recomendaciones de manejo.</li>
+              <li><strong>Ve a la Pestaña 4 (Complementary Analysis)</strong> — Inspecciona el contorno de segmentación para verificar la detección correcta.</li>
+              <li>Usa los resultados <strong>solo como apoyo a la decisión</strong>. Confirma siempre con un agrónomo calificado.</li>
+            </ol>
+          </div>
+
+          <div class="lang-pt">
+            <p><strong style="color:#CE93D8;"></strong></p>
+            <ol style="margin:10px 0 0 18px;font-size:0.88rem;line-height:1.8;">
+              <li><strong>Vá para a Aba 2 (Input)</strong> — Envie ou tire uma foto da folha de ervilha ou tomate.</li>
+              <li><strong>Clique em "Analyze image"</strong> — O modelo YOLO classifica a espécie e detecta o oídio.</li>
+              <li><strong>Vá para a Aba 3 (Results)</strong> — Leia o resultado da classificação, a severidade estimada e as recomendações de manejo.</li>
+              <li><strong>Vá para a Aba 4 (Complementary Analysis)</strong> — Inspecione o contorno de segmentação para verificar se a detecção está correta.</li>
+              <li>Use os resultados <strong>apenas como apoio à decisão</strong>. Sempre confirme com um agrônomo qualificado.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:10px;font-size:0.80rem;opacity:0.55;">
+          <span class="lang-en">↗ Use the floating buttons on the right for quick access to instructions, scope and animated tutorial.</span>
+          <span class="lang-es">↗ Usa los botones flotantes a la derecha para acceso rápido a instrucciones, alcance y tutorial animado.</span>
+          <span class="lang-pt">↗ Use os botões flutuantes à direita para acesso rápido às instruções, ao escopo e ao tutorial animado.</span>
+        </div>
+
+      </div> <!-- cierre correcto PANEL 1 -->
+
+      <!-- ════════════════════════════════
+           PANEL 2 — INPUT
+           ════════════════════════════════ -->
+     <div class="tab-panel active" id="tab-panel-1">
+
+  <!-- ── Formulario con iconos Lucide ── -->
+  <form id="upload-form" method="POST" enctype="multipart/form-data" class="card card-upload">
+    <input id="fileInputGallery" type="file" name="image" accept="image/*">
+    <input id="fileInputCamera" type="file" accept="image/*" capture="environment">
+
+    <label for="fileInputGallery" class="custom-file-label"
+           style="cursor:pointer;display:flex;align-items:center;gap:9px;justify-content:center;">
+      <i data-lucide="folder-open" class="lucide-btn"></i>
+      <span class="lang-en">Select a file</span>
+      <span class="lang-es">Seleccionar archivo</span>
+      <span class="lang-pt">Selecionar arquivo</span>
+    </label>
+
+    <label for="fileInputCamera" class="custom-file-label" id="btn-camera-label"
+           style="cursor:pointer;display:none;align-items:center;gap:9px;justify-content:center;">
+      <i data-lucide="camera" class="lucide-btn"></i>
+      <span class="lang-en">Open camera</span>
+      <span class="lang-es">Abrir cámara</span>
+      <span class="lang-pt">Abrir câmera</span>
+    </label>
+
+    <button type="button" class="secondary-button" onclick="pegarDesdePortapapeles()"
+            style="display:flex;align-items:center;gap:9px;justify-content:center;">
+      <i data-lucide="clipboard" class="lucide-btn"></i>
+      <span class="lang-en">Paste image from clipboard</span>
+      <span class="lang-es">Pegar imagen desde portapapeles</span>
+      <span class="lang-pt">Colar imagem da área de transferência</span>
+    </button>
+
+    <button type="button" class="primary-button" onclick="enviarFormulario()"
+            style="display:flex;align-items:center;gap:9px;justify-content:center;">
+      <i data-lucide="scan-search" class="lucide-btn"></i>
+      <span class="lang-en">Analyze image</span>
+      <span class="lang-es">Analizar imagen</span>
+      <span class="lang-pt">Analisar imagem</span>
+    </button>
+
+    <p class="help-text">
+      <span class="lang-en">Upload a photo or use your phone camera. You can also copy an image and paste it here.</span>
+      <span class="lang-es">Puedes subir una foto o usar la cámara de tu celular. También puedes copiar una imagen y pegarla aquí.</span>
+      <span class="lang-pt">Você pode enviar uma foto ou usar a câmera do seu celular. Também pode copiar uma imagem e colá-la aqui.</span>
+    </p>
+
+    <div id="preview-box">
+      <img id="preview-thumb" src="" alt="preview">
+      <div id="preview-info">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <i data-lucide="circle-check" style="width:16px;height:16px;stroke:#2e7d32;stroke-width:2.5px;fill:none;flex-shrink:0;"></i>
+          <strong>
+            <span class="lang-en">Image ready</span>
+            <span class="lang-es">Imagen lista</span>
+            <span class="lang-pt">Imagem pronta</span>
+          </strong>
+        </span>
+        <span id="preview-name">—</span><br>
+        <span id="preview-size" style="opacity:0.7;">—</span>
+      </div>
+    </div>
+  </form>
+
+  <div class="scope-block" style="margin-top:18px;">
+    <div class="scope-block-title">
+      <i data-lucide="info" class="lucide-scope-title"></i>
+      <span class="lang-en">Model scope &amp; user responsibility</span>
+      <span class="lang-es">Alcance del modelo y responsabilidad del usuario</span>
+    </div>
+
+    <div class="scope-lang en">
+      <div class="scope-lang-label en">
+        <i data-lucide="globe" class="lucide-scope-lang"></i>
+      </div>
+      <div class="scope-row row-plant">
+        <i data-lucide="sprout" class="lucide-scope"></i>
+        <span>This tool was designed and validated <strong>exclusively</strong> for the detection of powdery mildew (<em>Erysiphe</em> spp.) in pea (<em>Pisum sativum</em> var. Vizcaya) and tomato (<em>Solanum lycopersicum</em> L.) leaves.</span>
+      </div>
+      <div class="scope-row row-warn">
+        <i data-lucide="alert-triangle" class="lucide-scope"></i>
+        <span>Use on <strong class="warn">other crop species, plant diseases, or pathogens</strong> beyond the scope of this design is entirely at the user's own risk. Results may be inaccurate, misleading, or inapplicable for agronomic decision-making.</span>
+      </div>
+      <div class="scope-row row-micro">
+        <i data-lucide="microscope" class="lucide-scope"></i>
+        <span>Always confirm results with a <strong>qualified agronomist or plant pathologist</strong> before taking any management action.</span>
+      </div>
+      <div class="scope-row row-pin">
+        <i data-lucide="shield-alert" class="lucide-scope"></i>
+        <span>The developers <strong class="danger">assume no liability</strong> for misuse of the tool outside its intended scope.</span>
+      </div>
+    </div>
+
+    <div class="scope-lang es">
+      <div class="scope-lang-label es">
+        <i data-lucide="globe" class="lucide-scope-lang"></i>
+      </div>
+      <div class="scope-row row-plant">
+        <i data-lucide="sprout" class="lucide-scope"></i>
+        <span>Esta herramienta fue diseñada y validada <strong>exclusivamente</strong> para la detección de mildiu polvoso (<em>Erysiphe</em> spp.) en hojas de arveja (<em>Pisum sativum</em> var. Vizcaya) y tomate (<em>Solanum lycopersicum</em> L.).</span>
+      </div>
+      <div class="scope-row row-warn">
+        <i data-lucide="alert-triangle" class="lucide-scope"></i>
+        <span>El uso en <strong class="warn">otras especies de cultivo, enfermedades o patógenos</strong> fuera del alcance de diseño es de entera responsabilidad del usuario. Los resultados pueden ser inexactos, engañosos o inaplicables para la toma de decisiones agronómicas.</span>
+      </div>
+      <div class="scope-row row-micro">
+        <i data-lucide="microscope" class="lucide-scope"></i>
+        <span>Confirma siempre los resultados con un <strong>agrónomo o fitopatólogo calificado</strong> antes de tomar cualquier decisión de manejo.</span>
+      </div>
+      <div class="scope-row row-pin">
+        <i data-lucide="shield-alert" class="lucide-scope"></i>
+        <span>Los desarrolladores <strong class="danger">no asumen ninguna responsabilidad</strong> por el uso de la herramienta fuera de su alcance previsto.</span>
+      </div>
+    </div>
+
+    <div class="scope-lang pt">
+      <div class="scope-lang-label pt">
+        <i data-lucide="globe" class="lucide-scope-lang"></i>
+      </div>
+      <div class="scope-row row-plant">
+        <i data-lucide="sprout" class="lucide-scope"></i>
+        <span>Esta ferramenta foi projetada e validada <strong>exclusivamente</strong> para a detecção de oídio (<em>Erysiphe</em> spp.) em folhas de ervilha (<em>Pisum sativum</em> var. Vizcaya) e tomate (<em>Solanum lycopersicum</em> L.).</span>
+      </div>
+      <div class="scope-row row-warn">
+        <i data-lucide="alert-triangle" class="lucide-scope"></i>
+        <span>O uso em <strong class="warn">outras espécies de cultivo, doenças de plantas ou patógenos</strong> fora do escopo deste projeto é de inteira responsabilidade do usuário. Os resultados podem ser imprecisos, enganosos ou inaplicáveis para a tomada de decisão agronômica.</span>
+      </div>
+      <div class="scope-row row-micro">
+        <i data-lucide="microscope" class="lucide-scope"></i>
+        <span>Sempre confirme os resultados com um <strong>agrônomo ou fitopatologista qualificado</strong> antes de adotar qualquer medida de manejo.</span>
+      </div>
+      <div class="scope-row row-pin">
+        <i data-lucide="shield-alert" class="lucide-scope"></i>
+        <span>Os desenvolvedores <strong class="danger">não assumem qualquer responsabilidade</strong> pelo uso indevido da ferramenta fora do seu escopo previsto.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+      <!-- ════════════════════════════════
+           PANEL 3 — RESULTS
+           ════════════════════════════════ -->
+      <div class="tab-panel" id="tab-panel-2">
+        {% if ok %}
+          <div class="card card-result">
+            <p>
+              <span class="lang-en"><strong>Inferred crop:</strong> {{ crop_name_es }} ({{ species }})</span>
+              <span class="lang-es"><strong>Especie inferida:</strong> {{ crop_name_es }} ({{ species }})</span>
+              <span class="lang-pt"><strong>Cultura inferida:</strong> {{ crop_name_es }} ({{ species }})</span>
+            </p>
+
+            <p>
+              <span class="lang-en">
+                <strong>Plant health status:</strong>
+                {% if is_healthy %}✅ Healthy leaf{% else %}🦠 Powdery mildew detected{% endif %}
+              </span>
+              <span class="lang-es">
+                <strong>Estado sanitario:</strong>
+                {% if is_healthy %}✅ Hoja sana{% else %}🦠 Hoja con mildiu polvoso{% endif %}
+              </span>
+              <span class="lang-pt">
+                <strong>Estado fitossanitário:</strong>
+                {% if is_healthy %}✅ Folha saudável{% else %}🦠 Folha com oídio{% endif %}
+              </span>
+            </p>
+
+            <p>
+              <span class="lang-en"><strong>YOLO class (Confidence):</strong> {{ cls_name }} ({{ (cls_conf*100)|round(2) }} %)</span>
+              <span class="lang-es"><strong>Clase YOLO (confianza):</strong> {{ cls_name }} ({{ (cls_conf*100)|round(2) }} %)</span>
+              <span class="lang-pt"><strong>Classe YOLO (confiança):</strong> {{ cls_name }} ({{ (cls_conf*100)|round(2) }} %)</span>
+            </p>
+
+            <p>
+              <span class="lang-en"><strong>YOLO classification time:</strong> {{ (cls_time_ms/1000)|round(3) }} s</span>
+              <span class="lang-es"><strong>Tiempo clasificación YOLO:</strong> {{ (cls_time_ms/1000)|round(3) }} s</span>
+              <span class="lang-pt"><strong>Tempo de classificação YOLO:</strong> {{ (cls_time_ms/1000)|round(3) }} s</span>
+            </p>
+
+            {% if seg_ok %}
+              <p>
+                <span class="lang-en"><strong>Leaf detection confidence (YOLO seg):</strong> {{ (leaf_conf*100)|round(2) }} %</span>
+                <span class="lang-es"><strong>Confianza detección de hoja:</strong> {{ (leaf_conf*100)|round(2) }} %</span>
+                <span class="lang-pt"><strong>Confiança na detecção da folha:</strong> {{ (leaf_conf*100)|round(2) }} %</span>
+              </p>
+
+              <p>
+                <span class="lang-en"><strong>Leaf segmentation time:</strong> {{ (seg_time_ms/1000)|round(3) }} s</span>
+                <span class="lang-es"><strong>Tiempo segmentación hoja:</strong> {{ (seg_time_ms/1000)|round(3) }} s</span>
+                <span class="lang-pt"><strong>Tempo de segmentação da folha:</strong> {{ (seg_time_ms/1000)|round(3) }} s</span>
+              </p>
+
+              <p>
+                <span class="lang-en"><strong>Estimated powdery mildew severity:</strong> {{ severidad_pct|round(2) }} %</span>
+                <span class="lang-es"><strong>Severidad estimada de mildiu:</strong> {{ severidad_pct|round(2) }} % del área foliar</span>
+                <span class="lang-pt"><strong>Severidade estimada do oídio:</strong> {{ severidad_pct|round(2) }} % da área foliar</span>
+              </p>
+            {% endif %}
+          </div>
+
+          <div class="card card-images">
+            <div class="img-block">
+              <h3>
+                <span class="lang-en">🖼️ Original image</span>
+                <span class="lang-es">🖼️ Imagen original</span>
+                <span class="lang-pt">🖼️ Imagem original</span>
+              </h3>
+              <img src="{{ orig_img_path }}" alt="Original image" class="result-img">
+            </div>
+
+            {% if crop_img_path %}
+              <div class="img-block">
+                <h3>
+                  <span class="lang-en">🌿 Detected leaf crop</span>
+                  <span class="lang-es">🌿 Recorte de hoja detectada</span>
+                  <span class="lang-pt">🌿 Recorte da folha detectada</span>
+                </h3>
+                <img src="{{ crop_img_path }}" alt="Detected leaf crop" class="result-img">
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card card-decisions">
+            <h3>
+              <span class="lang-en">⚠️ Possible management actions</span>
+              <span class="lang-es">⚠️ Posibles decisiones de manejo</span>
+              <span class="lang-pt">⚠️ Possíveis decisões de manejo</span>
+            </h3>
+
+            <p>
+              <span class="lang-en">These recommendations are indicative and must be validated with a local professional.</span>
+              <span class="lang-es">Estas recomendaciones son orientativas. Deben validarse con un profesional local.</span>
+              <span class="lang-pt">Estas recomendações são indicativas e devem ser validadas com um profissional local.</span>
+            </p>
+
+            {% if is_healthy %}
+              <h4>
+                <span class="lang-en">🌱 Healthy leaf</span>
+                <span class="lang-es">🌱 Hoja sana</span>
+                <span class="lang-pt">🌱 Folha saudável</span>
+              </h4>
+              <ul>
+                <li><span class="lang-en">Maintain periodic monitoring (once per week).</span><span class="lang-es">Mantener monitoreo periódico (1 vez por semana).</span><span class="lang-pt">Manter monitoramento periódico (uma vez por semana).</span></li>
+                <li><span class="lang-en">Rotate crops with grasses and ensure good canopy ventilation.</span><span class="lang-es">Rotación de cultivos con gramíneas y buena ventilación.</span><span class="lang-pt">Rotacionar culturas com gramíneas e garantir boa ventilação do dossel.</span></li>
+                <li><span class="lang-en">Avoid excess nitrogen fertilization.</span><span class="lang-es">Evitar excesos de nitrógeno en fertilización.</span><span class="lang-pt">Evitar excesso de nitrogênio na adubação.</span></li>
+              </ul>
+            {% else %}
+              <h4>
+                <span class="lang-en">🍃 Powdery mildew detected</span>
+                <span class="lang-es">🍃 Hoja con mildiu polvoso</span>
+                <span class="lang-pt">🍃 Oídio detectado</span>
+              </h4>
+              <p>
+                <span class="lang-en"><strong>Estimated severity:</strong> {{ severidad_pct|round(2) }} %</span>
+                <span class="lang-es"><strong>Severidad estimada:</strong> {{ severidad_pct|round(2) }} % del área foliar.</span>
+                <span class="lang-pt"><strong>Severidade estimada:</strong> {{ severidad_pct|round(2) }} % da área foliar.</span>
+              </p>
+
+              {% if severidad_pct < 10 %}
+                <p><span class="lang-en">Low severity. Recommended:</span><span class="lang-es">Nivel bajo. Se recomienda:</span><span class="lang-pt">Baixa severidade. Recomenda-se:</span></p>
+                <ul>
+                  <li><span class="lang-en">Manually remove highly affected leaves.</span><span class="lang-es">Retirar hojas muy afectadas de forma manual.</span><span class="lang-pt">Remover manualmente as folhas mais afetadas.</span></li>
+                  <li><span class="lang-en">Use biofungicides and preventive management.</span><span class="lang-es">Uso de biofungicidas y manejo preventivo.</span><span class="lang-pt">Usar biofungicidas e manejo preventivo.</span></li>
+                </ul>
+              {% elif severidad_pct < 30 %}
+                <p><span class="lang-en">Moderate severity. Recommended:</span><span class="lang-es">Nivel moderado. Se recomienda:</span><span class="lang-pt">Severidade moderada. Recomenda-se:</span></p>
+                <ul>
+                  <li><span class="lang-en">Consider targeted applications of protectant fungicides.</span><span class="lang-es">Evaluar aplicaciones dirigidas de fungicidas protectantes.</span><span class="lang-pt">Avaliar aplicações direcionadas de fungicidas protetores.</span></li>
+                  <li><span class="lang-en">Strengthen cultural practices (density, ventilation, irrigation).</span><span class="lang-es">Refuerzo de prácticas culturales.</span><span class="lang-pt">Reforçar as práticas culturais (densidade, ventilação, irrigação).</span></li>
+                </ul>
+              {% else %}
+                <p><span class="lang-en">High severity. Recommended:</span><span class="lang-es">Nivel alto. Se recomienda:</span><span class="lang-pt">Alta severidade. Recomenda-se:</span></p>
+                <ul>
+                  <li><span class="lang-en">Consult a specialist for intensive chemical control.</span><span class="lang-es">Evaluar con especialista el control químico intensivo.</span><span class="lang-pt">Consultar um especialista para controle químico intensivo.</span></li>
+                  <li><span class="lang-en">Plan crop rotation for the next cycle.</span><span class="lang-es">Planear rotación de cultivo para próximos ciclos.</span><span class="lang-pt">Planejar rotação de culturas para o próximo ciclo.</span></li>
+                </ul>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <button class="csv-button" onclick="descargarCSV()">
+            <i data-lucide="file-down" style="width:18px;height:18px;stroke:#fff;stroke-width:2px;fill:none;"></i>
+            <span class="lang-en">Download results (CSV)</span>
+            <span class="lang-es">Descargar resultados (CSV)</span>
+            <span class="lang-pt">Baixar resultados (CSV)</span>
+          </button>
+
+        {% else %}
+          <div class="card card-info" style="text-align:center;padding:40px 20px;">
+            <p style="font-size:2.5rem;margin-bottom:12px;">📊</p>
+
+            <p>
+              <strong class="lang-en">No results yet.</strong>
+              <strong class="lang-es">Aún no hay resultados.</strong>
+              <strong class="lang-pt">Ainda não há resultados.</strong>
+            </p>
+
+            <p style="opacity:0.65;margin-top:10px;font-size:0.88rem;">
+              <span class="lang-en">Go to Tab 2 (Input), upload an image and click Analyze.</span>
+              <span class="lang-es">Ve a la Pestaña 2 (Input), sube una imagen y haz clic en Analizar.</span>
+              <span class="lang-pt">Vá para a Aba 2 (Input), envie uma imagem e clique em Analyze.</span>
+            </p>
+
+            <button class="t-nav-btn" style="margin-top:18px;" onclick="cambiarTab(1)">
+              <span class="lang-en">📤 Go to Input</span>
+              <span class="lang-es">📤 Ir a Cargar imagen</span>
+              <span class="lang-pt">📤 Ir para Input</span>
+            </button>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ════════════════════════════════
+           PANEL 4 — COMPLEMENTARY
+           ════════════════════════════════ -->
+      <div class="tab-panel" id="tab-panel-3">
+        {% if ok and seg_vis_path %}
+          <div class="card card-images">
+            <div class="img-block wide">
+              <h3>
+                <span class="lang-en">🧩 Powdery mildew signs outline</span>
+                <span class="lang-es">🧩 Contornos de los signos de mildiu polvoso</span>
+                <span class="lang-pt">🧩 Contornos dos sinais de oídio</span>
+              </h3>
+              <p style="font-size:0.88rem;opacity:0.85;margin-bottom:14px;line-height:1.65;">
+                <span class="lang-en">Use this image to visually verify whether the model is correctly segmenting the powdery mildew signs on the leaf surface.</span>
+                <span class="lang-es">Usa esta imagen para verificar visualmente si el modelo está segmentando correctamente los signos de mildiu polvoso sobre la superficie foliar.</span>
+                <span class="lang-pt">Use esta imagem para verificar visualmente se o modelo está segmentando corretamente os sinais de oídio na superfície foliar.</span>
+              </p>
+              <img src="{{ seg_vis_path }}" alt="Powdery mildew signs outline" class="result-img" style="max-width:100%;">
+            </div>
+          </div>
+        {% else %}
+          <div class="card card-info" style="text-align:center;padding:40px 20px;">
+            <p style="font-size:2.5rem;margin-bottom:12px;">🔬</p>
+
+            <p>
+              <strong class="lang-en">No complementary analysis yet.</strong>
+              <strong class="lang-es">Aún no hay análisis complementario.</strong>
+              <strong class="lang-pt">Ainda não há análise complementar.</strong>
+            </p>
+
+            <p style="opacity:0.65;margin-top:10px;font-size:0.88rem;">
+              <span class="lang-en">Analyze a leaf image first, then check this tab.</span>
+              <span class="lang-es">Analiza primero una imagen de hoja y luego revisa esta pestaña.</span>
+              <span class="lang-pt">Analise primeiro uma imagem da folha e depois consulte esta aba.</span>
+            </p>
+
+            <button class="t-nav-btn" style="margin-top:18px;" onclick="cambiarTab(1)"><span class="lang-en">📤 Go to Input</span><span class="lang-es">📤 Ir a Cargar imagen</span><span class="lang-pt">📤 Ir para Input</span></button>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ════════════════════════════════
+           PANEL 5 — ABOUT
+           ════════════════════════════════ -->
+      <div class="tab-panel" id="tab-panel-4">
+        <div class="scope-block">
+          <div class="scope-block-title">
+            <i data-lucide="user-round" class="lucide-scope-title"></i>
+            <span class="lang-en">About the developer</span>
+            <span class="lang-es">Acerca del desarrollador</span>
+            <span class="lang-pt">Sobre o desenvolvedor</span>
+          </div>
+
+          <div class="scope-lang en">
+            <div class="scope-lang-label en"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant">
+              <i data-lucide="scan-search" class="lucide-scope"></i>
+              <span><strong>Application:</strong> Powdery mildew classifier &amp; lesion segmenter in pea and tomato.</span>
+            </div>
+            <div class="scope-row row-micro">
+              <i data-lucide="user" class="lucide-scope"></i>
+              <span><strong>Developed by:</strong> J.E. Flores-Riera.</span>
+            </div>
+            <div class="scope-row row-pin">
+              <i data-lucide="mail" class="lucide-scope"></i>
+              <span><strong>Contact:</strong> <a href="mailto:jfloresr@unal.edu.co">jfloresr@unal.edu.co</a></span>
+            </div>
+            <div class="scope-row row-warn">
+              <i data-lucide="linkedin" class="lucide-scope"></i>
+              <span><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/flores-riera/" target="_blank">flores-riera</a></span>
+            </div>
+          </div>
+
+          <div class="scope-lang es">
+            <div class="scope-lang-label es"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant">
+              <i data-lucide="scan-search" class="lucide-scope"></i>
+              <span><strong>Aplicación:</strong> Clasificador y segmentador de mildiu polvoso en arveja y tomate.</span>
+            </div>
+            <div class="scope-row row-micro">
+              <i data-lucide="user" class="lucide-scope"></i>
+              <span><strong>Desarrollado por:</strong> J.E. Flores-Riera.</span>
+            </div>
+            <div class="scope-row row-pin">
+              <i data-lucide="mail" class="lucide-scope"></i>
+              <span><strong>Contacto:</strong> <a href="mailto:jfloresr@unal.edu.co">jfloresr@unal.edu.co</a></span>
+            </div>
+            <div class="scope-row row-warn">
+              <i data-lucide="linkedin" class="lucide-scope"></i>
+              <span><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/flores-riera/" target="_blank">flores-riera</a></span>
+            </div>
+          </div>
+
+          <div class="scope-lang pt">
+            <div class="scope-lang-label pt"><i data-lucide="globe" class="lucide-scope-lang"></i></div>
+            <div class="scope-row row-plant">
+              <i data-lucide="scan-search" class="lucide-scope"></i>
+              <span><strong>Aplicação:</strong> Classificador e segmentador de oídio em ervilha e tomate.</span>
+            </div>
+            <div class="scope-row row-micro">
+              <i data-lucide="user" class="lucide-scope"></i>
+              <span><strong>Desenvolvido por:</strong> J.E. Flores-Riera.</span>
+            </div>
+            <div class="scope-row row-pin">
+              <i data-lucide="mail" class="lucide-scope"></i>
+              <span><strong>Contato:</strong> <a href="mailto:jfloresr@unal.edu.co">jfloresr@unal.edu.co</a></span>
+            </div>
+            <div class="scope-row row-warn">
+              <i data-lucide="linkedin" class="lucide-scope"></i>
+              <span><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/flores-riera/" target="_blank">flores-riera</a></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-info">
+          <h3 style="display:flex;align-items:center;gap:7px;">
+            <i data-lucide="badge-info" style="width:18px;height:18px;stroke:currentColor;stroke-width:2px;fill:none;"></i>
+            <span class="lang-en">Credits</span>
+            <span class="lang-es">Créditos</span>
+            <span class="lang-pt">Créditos</span>
+          </h3>
+
+          <p style="font-size:0.90rem;line-height:1.75;">
+            <span class="lang-en">
+              This work was developed in the laboratory of agrocomputing and epidemiological analysis 227. Project images taken by the developer in crops related to the circular economy project of the Facultad de Ciencias Agrarias de la Universidad Nacional de Colombia, Bogotá campus. Acknowledgments to Professors Helber Balaguera, Rodrigo Gil Catañeda, Joaquín Guillermo Ramírez, and Nicolás Duarte Cano.
+            </span>
+            <span class="lang-es">
+              Este trabajo se ha desarrollado en el laboratorio de agrocomputación y análisis epidemiológico 227. Las imágenes del proyecto han sido tomadas por el autor en cultivos relacionados con el proyecto de economía circular de la Facultad de Ciencias Agrarias de la Universidad Nacional de Colombia, sede de Bogotá. Agradecemos a los profesores Helber Balaguera, Rodrigo Gil Catañeda, Joaquín Guillermo Ramírez y Nicolás Duarte Cano.
+            </span>
+            <span class="lang-pt">
+              Este trabalho foi desenvolvido no laboratório de agrocomputação e análise epidemiológica 227. As imagens do projeto foram capturadas pelo autor em cultivos relacionados ao projeto de economia circular da Faculdade de Ciências Agrárias da Universidade Nacional da Colômbia, campus Bogotá. Agradecimentos aos professores Helber Balaguera, Rodrigo Gil Catañeda, Joaquín Guillermo Ramírez e Nicolás Duarte Cano.
+            </span>
+            <span><strong>Web:</strong> <a href="https://cienciasagrarias.bogota.unal.edu.co/dependencias/unidades-de-apoyo-acad%C3%A9mico/agrocomputation" target="_blank">Agrocomputation and Epidemiological Analysis Lab 227</a></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- BARRA INFERIOR DE PESTAÑAS -->
+      <div class="tab-bar" id="main-tab-bar">
+        <button class="tab-btn" onclick="cambiarTab(0)" id="tab-btn-0">
+          <span class="tab-icon"><i data-lucide="book-open" class="lucide-tab"></i></span>
+          <span class="tab-en">1. Instructions</span>
+          <span class="tab-es">Instrucciones</span>
+          <span class="tab-pt">1. Instruções</span>
+        </button>
+
+        <button class="tab-btn active" onclick="cambiarTab(1)" id="tab-btn-1">
+          <span class="tab-icon"><i data-lucide="image-up" class="lucide-tab"></i></span>
+          <span class="tab-en">2. Input</span>
+          <span class="tab-es">Cargar imagen</span>
+          <span class="tab-pt">2. Entrada</span>
+        </button>
+
+        <button class="tab-btn {% if not ok %}tab-disabled{% endif %}" onclick="cambiarTab(2)" id="tab-btn-2">
+          <span class="tab-icon"><i data-lucide="chart-bar-big" class="lucide-tab"></i></span>
+          <span class="tab-en">3. Results</span>
+          <span class="tab-es">Resultados</span>
+          <span class="tab-pt">3. Resultados</span>
+          {% if ok %}<span class="tab-badge">NEW</span>{% endif %}
+        </button>
+
+        <button class="tab-btn {% if not ok %}tab-disabled{% endif %}" onclick="cambiarTab(3)" id="tab-btn-3">
+          <span class="tab-icon"><i data-lucide="microscope" class="lucide-tab"></i></span>
+          <span class="tab-en">4. Complementary</span>
+          <span class="tab-es">Análisis compl.</span>
+          <span class="tab-pt">4. Compl.</span>
+          {% if ok %}<span class="tab-badge">NEW</span>{% endif %}
+        </button>
+
+        <button class="tab-btn" onclick="cambiarTab(4)" id="tab-btn-4">
+          <span class="tab-icon"><i data-lucide="circle-user-round" class="lucide-tab"></i></span>
+          <span class="tab-en">5. About</span>
+          <span class="tab-es">Acerca de</span>
+          <span class="tab-pt">5. Sobre</span>
+        </button>
+      </div>
+
+    </div><!-- fin tabs-wrapper -->
+  </div><!-- fin container-fluid -->
+
+  <!-- ══ FABs — solo en Tab 0 (Instructions) ══ -->
+  <div id="help-button" class="fab fab-hidden" onclick="abrirModalAyuda()" title="Instructions / Instrucciones / Instruções">
+    <i data-lucide="circle-help" class="lucide-fab"></i>
+    <span class="fab-bubble green">Instructions / Instrucciones de uso / Instruções de uso</span>
+  </div>
+  <div id="scope-button" class="fab fab-hidden" onclick="abrirModalAlcance()" title="Model scope / Alcance / Escopo">
+    <i data-lucide="info" class="lucide-fab"></i>
+    <span class="fab-bubble amber">Model scope / Alcance del modelo / Escopo do modelo</span>
+  </div>
+  <div id="tutorial-button" class="fab fab-hidden" onclick="abrirTutorial()" title="Tutorial">
+    <i data-lucide="clapperboard" class="lucide-fab"></i>
+    <span class="fab-bubble purple">How to use / Cómo usar / Como usar</span>
+  </div>
+
+  <!-- ══ MODAL INSTRUCCIONES ══ -->
+  <div class="text-modal-overlay" id="modal-ayuda" onclick="cerrarModalOverlay(event,'modal-ayuda')">
+    <div class="text-modal-box">
+      <button class="text-modal-close" onclick="cerrarModal('modal-ayuda')">✕</button>
+      <div class="text-modal-title">
+        <i data-lucide="list-ordered" class="lucide-modal-step" style="stroke:#81C784;"></i>
+        <span class="lang-en">Instructions for use</span>
+        <span class="lang-es">Instrucciones de uso</span>
+        <span class="lang-pt">Instruções de uso</span>
+      </div>
+      <div class="modal-lang-block en">
+        <div class="modal-lang-label en"><i data-lucide="globe" style="width:13px;height:13px;stroke:#64B5F6;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="image-up" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Step 0:</strong> Go to Tab 2 (Input) — Upload or take a photo of a pea or tomato leaf.</span></div>
+        <div class="modal-step"><i data-lucide="brain" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Step 1:</strong> Click "Analyze image" — The YOLO model classifies the crop species and detects powdery mildew.</span></div>
+        <div class="modal-step"><i data-lucide="chart-bar-big" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Step 2:</strong> Go to Tab 3 (Results) — Read the classification result, severity estimate and management recommendations.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Step 3:</strong> Go to Tab 4 (Complementary Analysis) — Inspect the segmentation outline to verify correct detection.</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">Use results as <strong>decision support only</strong>. They do not replace the diagnosis of a qualified agronomist or plant pathologist.</span></div>
+        <div class="modal-step"><i data-lucide="info" class="lucide-modal-step"></i><span class="modal-step-text">Models trained for <strong>pea (<em>Pisum sativum</em> var. Vizcaya)</strong> and <strong>tomato (<em>Solanum lycopersicum</em> L.)</strong> leaves only.</span></div>
+      </div>
+      <div class="modal-lang-block es">
+        <div class="modal-lang-label es"><i data-lucide="globe" style="width:13px;height:13px;stroke:#A5D6A7;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="image-up" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Paso 0:</strong> Ve a la Pestaña 2 (Input) — Sube o toma una foto de la hoja de arveja o tomate.</span></div>
+        <div class="modal-step"><i data-lucide="brain" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Paso 1:</strong> Haz clic en "Analizar imagen" — El modelo YOLO clasifica la especie del cultivo y detecta el mildiu polvoso.</span></div>
+        <div class="modal-step"><i data-lucide="chart-bar-big" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Paso 2:</strong> Ve a la Pestaña 3 (Results) — Lee el resultado de clasificación, la severidad estimada y las recomendaciones de manejo.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Paso 3:</strong> Ve a la Pestaña 4 (Complementary Analysis) — Inspecciona el contorno de segmentación para verificar la detección correcta.</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">Usa los resultados <strong>solo como apoyo a la decisión</strong>. No reemplazan el diagnóstico de un agrónomo o fitopatólogo calificado.</span></div>
+        <div class="modal-step"><i data-lucide="info" class="lucide-modal-step"></i><span class="modal-step-text">Modelos entrenados únicamente para hojas de <strong>arveja (<em>Pisum sativum</em> var. Vizcaya)</strong> y <strong>tomate (<em>Solanum lycopersicum</em> L.)</strong>.</span></div>
+      </div>
+      <div class="modal-lang-block pt">
+        <div class="modal-lang-label pt"><i data-lucide="globe" style="width:13px;height:13px;stroke:#CE93D8;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="image-up" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Passo 0:</strong> Vá para a Aba 2 (Input) — Envie ou tire uma foto da folha de ervilha ou tomate.</span></div>
+        <div class="modal-step"><i data-lucide="brain" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Passo 1:</strong> Clique em "Analyze image" — O modelo YOLO classifica a espécie da cultura e detecta o oídio.</span></div>
+        <div class="modal-step"><i data-lucide="chart-bar-big" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Passo 2:</strong> Vá para a Aba 3 (Results) — Leia o resultado da classificação, a severidade estimada e as recomendações de manejo.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text"><strong>Passo 3:</strong> Vá para a Aba 4 (Complementary Analysis) — Inspecione o contorno de segmentação para verificar se a detecção está correta.</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">Use os resultados <strong>apenas como apoio à decisão</strong>. Eles não substituem o diagnóstico de um agrônomo ou fitopatologista qualificado.</span></div>
+        <div class="modal-step"><i data-lucide="info" class="lucide-modal-step"></i><span class="modal-step-text">Modelos treinados exclusivamente para folhas de <strong>ervilha (<em>Pisum sativum</em> var. Vizcaya)</strong> e <strong>tomate (<em>Solanum lycopersicum</em> L.)</strong>.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MODAL ALCANCE ══ -->
+  <div class="text-modal-overlay" id="modal-alcance" onclick="cerrarModalOverlay(event,'modal-alcance')">
+    <div class="text-modal-box amber-modal">
+      <button class="text-modal-close" onclick="cerrarModal('modal-alcance')">✕</button>
+      <div class="text-modal-title">
+        <i data-lucide="info" class="lucide-modal-step" style="stroke:#FFCA28;"></i>
+        <span class="lang-en">Model scope &amp; user responsibility</span>
+        <span class="lang-es">Alcance del modelo y responsabilidad del usuario</span>
+        <span class="lang-pt">Escopo do modelo e responsabilidade do usuário</span>
+      </div>
+      <div class="modal-lang-block en">
+        <div class="modal-lang-label en"><i data-lucide="globe" style="width:13px;height:13px;stroke:#64B5F6;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="sprout" class="lucide-modal-step"></i><span class="modal-step-text">This tool was designed and validated <strong>exclusively</strong> for pea (<em>Pisum sativum</em> var. Vizcaya) and tomato (<em>Solanum lycopersicum</em> L.) leaves.</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">Use on <strong>other crop species, plant diseases, or pathogens</strong> is entirely at the user's own risk. Results may be inaccurate or inapplicable for agronomic decision-making.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text">Always confirm results with a <strong>qualified agronomist or plant pathologist</strong> before taking any management action.</span></div>
+        <div class="modal-step"><i data-lucide="shield-alert" class="lucide-modal-step"></i><span class="modal-step-text">The developers <strong>assume no liability</strong> for misuse of the tool outside its intended scope.</span></div>
+      </div>
+      <div class="modal-lang-block es">
+        <div class="modal-lang-label es"><i data-lucide="globe" style="width:13px;height:13px;stroke:#A5D6A7;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="sprout" class="lucide-modal-step"></i><span class="modal-step-text">Esta herramienta fue diseñada y validada <strong>exclusivamente</strong> para hojas de arveja (<em>Pisum sativum</em> var. Vizcaya) y tomate (<em>Solanum lycopersicum</em> L.).</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">El uso en <strong>otras especies de cultivo, enfermedades o patógenos</strong> es de entera responsabilidad del usuario. Los resultados pueden ser inexactos o inaplicables para decisiones agronómicas.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text">Confirma siempre los resultados con un <strong>agrónomo o fitopatólogo calificado</strong> antes de tomar cualquier decisión de manejo.</span></div>
+        <div class="modal-step"><i data-lucide="shield-alert" class="lucide-modal-step"></i><span class="modal-step-text">Los desarrolladores <strong>no asumen ninguna responsabilidad</strong> por el uso de la herramienta fuera de su alcance previsto.</span></div>
+      </div>
+      <div class="modal-lang-block pt">
+        <div class="modal-lang-label pt"><i data-lucide="globe" style="width:13px;height:13px;stroke:#CE93D8;stroke-width:2px;fill:none;"></i></div>
+        <div class="modal-step"><i data-lucide="sprout" class="lucide-modal-step"></i><span class="modal-step-text">Esta ferramenta foi projetada e validada <strong>exclusivamente</strong> para folhas de ervilha (<em>Pisum sativum</em> var. Vizcaya) e tomate (<em>Solanum lycopersicum</em> L.).</span></div>
+        <div class="modal-step"><i data-lucide="alert-triangle" class="lucide-modal-step"></i><span class="modal-step-text">O uso em <strong>outras espécies de cultivo, doenças de plantas ou patógenos</strong> é de inteira responsabilidade do usuário. Os resultados podem ser imprecisos ou inaplicáveis para decisões agronômicas.</span></div>
+        <div class="modal-step"><i data-lucide="microscope" class="lucide-modal-step"></i><span class="modal-step-text">Sempre confirme os resultados com um <strong>agrônomo ou fitopatologista qualificado</strong> antes de adotar qualquer medida de manejo.</span></div>
+        <div class="modal-step"><i data-lucide="shield-alert" class="lucide-modal-step"></i><span class="modal-step-text">Os desenvolvedores <strong>não assumem qualquer responsabilidade</strong> pelo uso da ferramenta fora do seu escopo previsto.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TUTORIAL ══ -->
+  <div id="tutorial-overlay" onclick="cerrarTutorialOverlay(event)">
+    <div id="tutorial-modal">
+      <div id="tut-progress-bar" style="width:25%;"></div>
+      <button id="tut-close" onclick="cerrarTutorial()">✕</button>
+      <div id="tut-dots">
+        <span class="t-dot active" onclick="irAEscena(0)"></span>
+        <span class="t-dot" onclick="irAEscena(1)"></span>
+        <span class="t-dot" onclick="irAEscena(2)"></span>
+        <span class="t-dot" onclick="irAEscena(3)"></span>
+      </div>
+
+      <div class="tut-scene active" id="tut-scene-0">
+        <div class="tut-step-label">Step 1 / Paso 1</div>
+        <div class="tut-title">🌿 Choose the right leaf<br><span style="font-size:.88rem;font-weight:500;opacity:.85;">Elige la hoja correcta</span></div>
+        <div class="leaves-grid">
+          <div class="leaf-card ok" style="animation-delay:.05s"><div class="leaf-emoji">🫛</div><div class="leaf-name">Pea / Arveja<br><em>Pisum sativum</em></div><span class="leaf-badge">✅</span></div>
+          <div class="leaf-card ok" style="animation-delay:.3s"><div class="leaf-emoji">🍅</div><div class="leaf-name">Tomato / Tomate<br><em>S. lycopersicum</em></div><span class="leaf-badge">✅</span></div>
+          <div class="leaf-card bad" style="animation-delay:.55s"><div class="leaf-emoji">🌱</div><div class="leaf-name">Other / Otras<br><em>species</em></div><span class="leaf-badge">❌</span></div>
+        </div>
+        <p class="tut-desc">Use only <strong style="color:#81C784;">pea or tomato</strong> leaves. / Usa solo hojas de <strong style="color:#81C784;">arveja o tomate</strong>.</p>
+      </div>
+
+      <div class="tut-scene" id="tut-scene-1">
+        <div class="tut-step-label">Step 2 / Paso 2</div>
+        <div class="tut-title">📱 Frame the leaf<br><span style="font-size:.88rem;font-weight:500;opacity:.85;">Encuadra la hoja con el celular</span></div>
+        <div class="phone-wrap">
+          <div class="frame-tip"><strong>📐 Fill the frame!</strong>Centre &amp; get close / Centra la hoja y acércate</div>
+          <div class="phone-body">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="screen-leaf">🌿</div>
+              <div class="focus-flash"></div>
+              <div class="focus-box"><span class="fc tl"></span><span class="fc tr"></span><span class="fc bl"></span><span class="fc br"></span></div>
+            </div>
+            <div class="phone-home"></div>
+          </div>
+        </div>
+        <p class="tut-desc">Good lighting, stable hand, leaf in focus. / Buena iluminación, mano firme, hoja enfocada.</p>
+      </div>
+
+      <div class="tut-scene" id="tut-scene-2">
+        <div class="tut-step-label">Step 3 / Paso 3</div>
+        <div class="tut-title">📸 Capture or upload<br><span style="font-size:.88rem;font-weight:500;opacity:.85;">Captura o sube la foto</span></div>
+        <div class="capture-row">
+          <div class="cap-opt">
+            <div class="cap-opt-icon">📷<span class="finger">👆</span><div class="shutter-flash"></div></div>
+            <div class="cap-opt-label"><strong style="color:#81C784;display:block;">Camera / Cámara</strong>Tap the shutter /<br>Toca el disparador</div>
+          </div>
+          <div class="cap-divider">OR<br>O</div>
+          <div class="cap-opt">
+            <div class="cap-opt-icon">🖼️<span class="file-check" style="position:absolute;bottom:-8px;right:-8px;">✅</span></div>
+            <div class="cap-opt-label"><strong style="color:#81C784;display:block;">Gallery / Galería</strong>Select from files /<br>Selecciona del archivo</div>
+          </div>
+        </div>
+        <p class="tut-desc">A preview will confirm the image is ready. / Una vista previa confirmará que la imagen está lista.</p>
+      </div>
+
+      <div class="tut-scene" id="tut-scene-3">
+        <div class="tut-step-label">Step 4 / Paso 4</div>
+        <div class="tut-title">🧠 Analyze &amp; read results<br><span style="font-size:.88rem;font-weight:500;opacity:.85;">Analiza y lee los resultados</span></div>
+        <div class="analyze-demo">
+          <div class="demo-btn">Analyze image / Analizar imagen</div>
+          <div class="demo-spinner-wrap"><div class="demo-mini-spinner"></div><span>Processing… / Procesando…</span></div>
+          <div class="demo-result">
+            <strong>✅ Tomato / Tomate</strong><br>
+            🦠 Powdery mildew / Mildiu polvoso<br>
+            🔬 Severity / Severidad: <span style="color:#FFCA28;font-weight:700;">18.3 %</span>
+            <div class="sev-bar-wrap"><div class="sev-bar"></div></div>
+            <span style="font-size:.70rem;opacity:.65;display:block;margin-top:4px;">⚠️ Confirm with agronomist / Confirmar con agrónomo</span>
+          </div>
+        </div>
+        <p class="tut-desc">Results show species, health status &amp; estimated severity. / Los resultados muestran especie, estado sanitario y severidad estimada.</p>
+      </div>
+
+      <div id="tut-nav">
+        <button class="t-nav-btn" id="btn-prev" onclick="escenaAnterior()" disabled>‹ Back</button>
+        <span id="tut-counter">1 / 4</span>
+        <button class="t-nav-btn" id="btn-next" onclick="escenaSiguiente()">Next ›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay carga -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-card">
+      <strong>
+        <span class="lang-en">⏳ Analyzing image…</span>
+        <span class="lang-es">⏳ Analizando imagen…</span>
+        <span class="lang-pt">⏳ Analisando imagem…</span>
+      </strong>
+      <p>
+        <span class="lang-en">The AI model is processing your photo.</span>
+        <span class="lang-es">El modelo de IA está procesando tu foto.</span>
+        <span class="lang-pt">O modelo de IA está processando sua foto.</span>
+      </p>
+      <div class="loading-steps">
+        <div class="lang-en">
+          🧠 Step 1: YOLO classification<br>
+          🌿 Step 2: Leaf detection<br>
+          🔬 Step 3: Mildew segmentation
+        </div>
+        <div class="lang-es">
+          🧠 Paso 1: Clasificación YOLO<br>
+          🌿 Paso 2: Detección de hoja<br>
+          🔬 Paso 3: Segmentación de mildiu
+        </div>
+        <div class="lang-pt">
+          🧠 Passo 1: Classificação YOLO<br>
+          🌿 Passo 2: Detecção da folha<br>
+          🔬 Passo 3: Segmentação do oídio
+        </div>
+      </div>
+      <p style="margin-top:14px;font-size:.80rem;opacity:.65;">
+        <span class="lang-en">This may take 20–40 s on first run.</span>
+        <span class="lang-es">Puede tardar 20–40 s en la primera ejecución.</span>
+        <span class="lang-pt">Isso pode levar de 20 a 40 s na primeira execução.</span>
+      </p>
+    </div>
+  </div>
+
+  {% if ok %}
+    <div id="pv-results" hidden
+      data-species="{{ species }}"
+      data-crop="{{ crop_name_es }}"
+      data-status="{{ 'healthy' if is_healthy else 'diseased_powdery_mildew' }}"
+      data-cls-name="{{ cls_name }}"
+      data-cls-conf="{{ (cls_conf * 100) | round(2) }}"
+      data-cls-time="{{ (cls_time_ms / 1000) | round(3) }}"
+      data-seg-ok="{{ 'true' if seg_ok else 'false' }}"
+      data-leaf-conf="{{ (leaf_conf * 100) | round(2) if seg_ok else 0 }}"
+      data-seg-time="{{ (seg_time_ms / 1000) | round(3) if seg_ok else 0 }}"
+      data-severity="{{ severidad_pct | round(2) if seg_ok else 0 }}">
+    </div>
+  {% endif %}
+
+  <script>
+    /* ══ IDIOMA ══ */
+    function setLanguage(lang){
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+
+      var btnEn = document.getElementById('lang-btn-en');
+      var btnEs = document.getElementById('lang-btn-es');
+      var btnPt = document.getElementById('lang-btn-pt');
+
+      if(btnEn) btnEn.classList.toggle('active', lang === 'en');
+      if(btnEs) btnEs.classList.toggle('active', lang === 'es');
+      if(btnPt) btnPt.classList.toggle('active', lang === 'pt');
+
+      try{
+        localStorage.setItem('pv_lang', lang);
+      }catch(e){}
+    }
+
+    function currentLang(){
+      return document.documentElement.getAttribute('data-lang') || 'en';
+    }
+
+    /* ══ PESTAÑAS ══ */
+    var TAB_ACTUAL = 1;
+    function cambiarTab(n) {
+      TAB_ACTUAL = n;
+      document.querySelectorAll('.tab-btn').forEach(function(b,i){ b.classList.toggle('active',i===n); });
+      document.querySelectorAll('.tab-panel').forEach(function(p,i){ p.classList.toggle('active',i===n); });
+      ['help-button','scope-button','tutorial-button'].forEach(function(id){
+        var el = document.getElementById(id);
+        if (n===0){ el.classList.remove('fab-hidden'); } else { el.classList.add('fab-hidden'); }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', function(){
+      var savedLang = 'en';
+      try{
+        savedLang = localStorage.getItem('pv_lang') || 'en';
+      }catch(e){}
+      setLanguage(savedLang);
+      cambiarTab({% if ok %}2{% else %}1{% endif %});
+    });
+
+    /* ══ FONDO ROTATIVO ══ */
+    var imagenesFondo = [
+      'https://i.postimg.cc/sgmp0XJs/DJI-0246-scaled.jpg',
+      'https://i.postimg.cc/Nf49Qn2x/DJI-0225-scaled.jpg',
+      'https://i.postimg.cc/1z3sPptY/arvejas.jpg'
+    ];
+    var fondoActual = 0;
+    function rotarFondo(){
+      document.body.style.backgroundImage="url('"+imagenesFondo[fondoActual]+"')";
+      fondoActual=(fondoActual+1)%imagenesFondo.length;
+    }
+    setInterval(rotarFondo, 8000);
+    rotarFondo();
+
+    /* ══ MODALES ══ */
+    function abrirModalAyuda()   { document.getElementById('modal-ayuda').classList.add('active'); }
+    function abrirModalAlcance() { document.getElementById('modal-alcance').classList.add('active'); }
+    function cerrarModal(id)     { document.getElementById(id).classList.remove('active'); }
+    function cerrarModalOverlay(e,id){ if(e.target===document.getElementById(id)) cerrarModal(id); }
+
+    /* ══ TUTORIAL ══ */
+    var escenaActual=0, TOTAL_ESCENAS=4;
+    function abrirTutorial(){ escenaActual=0; actualizarTutorial(); document.getElementById('tutorial-overlay').classList.add('active'); }
+    function cerrarTutorial(){ document.getElementById('tutorial-overlay').classList.remove('active'); }
+    function cerrarTutorialOverlay(e){ if(e.target===document.getElementById('tutorial-overlay')) cerrarTutorial(); }
+    function irAEscena(n){ escenaActual=n; actualizarTutorial(); }
+    function escenaSiguiente(){ if(escenaActual<TOTAL_ESCENAS-1){escenaActual++;actualizarTutorial();}else cerrarTutorial(); }
+    function escenaAnterior(){ if(escenaActual>0){escenaActual--;actualizarTutorial();} }
+    function actualizarTutorial(){
+      document.querySelectorAll('.tut-scene').forEach(function(s,i){s.classList.toggle('active',i===escenaActual);});
+      document.querySelectorAll('.t-dot').forEach(function(d,i){d.classList.toggle('active',i===escenaActual);});
+      document.getElementById('tut-progress-bar').style.width=((escenaActual+1)/TOTAL_ESCENAS*100)+'%';
+      document.getElementById('tut-counter').textContent=(escenaActual+1)+' / '+TOTAL_ESCENAS;
+      document.getElementById('btn-prev').disabled=(escenaActual===0);
+      document.getElementById('btn-next').textContent=(escenaActual===TOTAL_ESCENAS-1)?'✓ Close / Cerrar':'Next ›';
+    }
+
+    /* ══ UPLOAD ══ */
+    var archivoSeleccionado=null;
+    if('ontouchstart' in window||navigator.maxTouchPoints>0){
+      var lbl=document.getElementById('btn-camera-label');
+      lbl.style.display='flex';
+    }
+
+    document.getElementById('fileInputGallery').addEventListener('change',function(){
+      if(this.files&&this.files[0]){
+        archivoSeleccionado=this.files[0];
+        mostrarPreview(archivoSeleccionado);
+      }
+    });
+
+    document.getElementById('fileInputCamera').addEventListener('change',function(){
+      if(this.files&&this.files[0]){
+        archivoSeleccionado=this.files[0];
+        mostrarPreview(archivoSeleccionado);
+      }
+    });
+
+    function _cargarImagenEnInput(blob){
+      var ext=blob.type==='image/png'?'.png':'.jpg';
+      archivoSeleccionado=new File([blob],'pasted-image'+ext,{type:blob.type});
+      mostrarPreview(archivoSeleccionado);
+    }
+
+    document.addEventListener('paste',function(e){
+      var items=e.clipboardData&&e.clipboardData.items;
+      if(!items)return;
+      for(var i=0;i<items.length;i++){
+        if(items[i].type.startsWith('image/')){
+          e.preventDefault();
+          _cargarImagenEnInput(items[i].getAsFile());
+          return;
+        }
+      }
+    });
+
+    async function pegarDesdePortapapeles(){
+      if(navigator.clipboard&&navigator.clipboard.read){
+        try{
+          var items=await navigator.clipboard.read();
+          for(var item of items){
+            var imgType=item.types.find(function(t){return t.startsWith('image/');});
+            if(imgType){
+              _cargarImagenEnInput(await item.getType(imgType));
+              return;
+            }
+          }
+          alert(currentLang() === 'es'
+            ? "⚠️ No hay imagen en el portapapeles."
+            : currentLang() === 'pt'
+            ? "⚠️ Nenhuma imagem encontrada na área de transferência."
+            : "⚠️ No image found in clipboard.");
+          return;
+        }catch(err){}
+      }
+      alert(currentLang() === 'es'
+        ? "📋 Presiona Ctrl+V (Windows) o Cmd+V (Mac) para pegar."
+        : currentLang() === 'pt'
+        ? "📋 Pressione Ctrl+V (Windows) ou Cmd+V (Mac) para colar."
+        : "📋 Press Ctrl+V (Windows) or Cmd+V (Mac) to paste.");
+    }
+
+    function enviarFormulario(){
+      if(!archivoSeleccionado){
+        alert(currentLang() === 'es'
+          ? "⚠️ Por favor selecciona una imagen primero."
+          : currentLang() === 'pt'
+          ? "⚠️ Por favor selecione uma imagem primeiro."
+          : "⚠️ Please select an image first.");
+        return;
+      }
+      document.getElementById('loading-overlay').classList.add('active');
+      try{
+        var dt=new DataTransfer();
+        dt.items.add(archivoSeleccionado);
+        var gi=document.getElementById('fileInputGallery');
+        gi.files=dt.files;
+        gi.setAttribute('name','image');
+        document.getElementById('fileInputCamera').removeAttribute('name');
+        document.getElementById('upload-form').submit();
+      }catch(e){
+        var fd=new FormData();
+        fd.append('image',archivoSeleccionado,archivoSeleccionado.name||'upload.jpg');
+        fetch('/',{method:'POST',body:fd})
+          .then(function(r){return r.text();})
+          .then(function(h){document.open();document.write(h);document.close();})
+          .catch(function(err){
+            document.getElementById('loading-overlay').classList.remove('active');
+            alert((currentLang() === 'es' ? 'Error al subir: ' : currentLang() === 'pt' ? 'Erro ao enviar: ' : 'Upload failed: ') + err.message);
+          });
+      }
+    }
+
+    function mostrarPreview(file){
+      if(!file)return;
+      var reader=new FileReader();
+      reader.onload=function(e){
+        document.getElementById('preview-thumb').src=e.target.result;
+        document.getElementById('preview-name').textContent=file.name;
+        document.getElementById('preview-size').textContent=(file.size/1024).toFixed(1)+' KB  ·  '+file.type.replace('image/','').toUpperCase();
+        document.getElementById('preview-box').classList.add('visible');
+        lucide.createIcons();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* ══ CSV ══ */
+    function descargarCSV(){
+      var el=document.getElementById('pv-results');
+      if(!el)return;
+      var d=el.dataset;
+      var lang=currentLang();
+
+      var labels={
+        en:{header1:'Field',header2:'Value',timestamp:'Timestamp',species:'Species',crop:'Crop',status:'Health status',cls:'YOLO class',conf:'YOLO confidence (%)',time:'YOLO time (s)',leafConf:'Leaf confidence (%)',segTime:'Seg. time (s)',sev:'Mildew severity (%)',healthy:'Healthy',diseased:'Diseased (powdery mildew)'},
+        es:{header1:'Campo',header2:'Valor',timestamp:'Fecha y hora',species:'Especie',crop:'Cultivo',status:'Estado sanitario',cls:'Clase YOLO',conf:'Confianza YOLO (%)',time:'Tiempo clasificación (s)',leafConf:'Confianza hoja (%)',segTime:'Tiempo segmentación (s)',sev:'Severidad mildiu (%)',healthy:'Sana',diseased:'Enferma (mildiu polvoso)'},
+        pt:{header1:'Campo',header2:'Valor',timestamp:'Data e hora',species:'Espécie',crop:'Cultura',status:'Estado fitossanitário',cls:'Classe YOLO',conf:'Confiança YOLO (%)',time:'Tempo de classificação (s)',leafConf:'Confiança da folha (%)',segTime:'Tempo de segmentação (s)',sev:'Severidade do oídio (%)',healthy:'Saudável',diseased:'Doente (oídio)'}
+      };
+      var t=labels[lang] || labels.en;
+      var statusValue=d.status==='healthy' ? t.healthy : t.diseased;
+
+      var rows=[
+        [t.header1,t.header2],
+        [t.timestamp,new Date().toISOString()],
+        [t.species,d.species],
+        [t.crop,d.crop],
+        [t.status,statusValue],
+        [t.cls,d.clsName],
+        [t.conf,d.clsConf],
+        [t.time,d.clsTime]
+      ];
+      if(d.segOk==='true'){
+        rows.push([t.leafConf,d.leafConf]);
+        rows.push([t.segTime,d.segTime]);
+        rows.push([t.sev,d.severity]);
+      }
+      var csv='\uFEFF'+rows.map(function(r){
+        return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');
+      }).join('\r\n');
+      var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url;
+      a.download='PowderyVision7_'+new Date().toISOString().slice(0,19).replace(/[T:]/g,'-')+'.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+
+  <script>
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  </script>
+
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('/static/sw.js').catch(function(err){
+          console.warn('SW no registrado:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+                
