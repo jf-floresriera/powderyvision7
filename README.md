@@ -1,12 +1,3 @@
----
-title: PowderyVision7
-emoji: 🌿
-colorFrom: green
-colorTo: green
-sdk: docker
-pinned: false
-short_description: Powdery mildew detection in pea and tomato leaves
----
 
 # PowderyVision7
 
